@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>公众号爆款选题系统</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="page">
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>公众号爆款选题系统</h1>
+      <p>按真实文章数据给出每期三组选题方向</p>
+    </div>
+    <div class="topbar-meta">
+      <span class="chip"><span class="chip-dot" aria-hidden="true"></span>本地运行 · 127.0.0.1:{{ port }}</span>
+      <button type="button" class="btn btn-quiet" id="btn-refresh">刷新页面</button>
+    </div>
+  </header>
+
+  <section class="actionbar" aria-label="操作步骤">
+    <div class="actionbar-title">按这个顺序操作</div>
+    <div class="steps">
+      <div class="step">
+        <button type="button" class="btn" id="btn-update"><span class="step-no">1</span>更新本地数据</button>
+        <p class="step-note">把本地文章扫进统计，免费</p>
+      </div>
+      <div class="step-arrow" aria-hidden="true">→</div>
+      <div class="step">
+        <button type="button" class="btn" id="btn-preview"><span class="step-no">2</span>预览 AI 分析</button>
+        <p class="step-note">看现在能不能分析，免费</p>
+      </div>
+      <div class="step-arrow" aria-hidden="true">→</div>
+      <div class="step">
+        <button type="button" class="btn btn-primary" id="btn-run"><span class="step-no">3</span>开始 AI 分析</button>
+        <p class="step-note">真出三组方向，会扣费，先确认</p>
+      </div>
+    </div>
+    <p class="actionbar-note">第 3 步只有在第 2 步显示「可分析」时才会真正花钱；没到时间会自动跳过，不会乱扣费。</p>
+  </section>
+
+  <section class="panel" id="panel-accounts">
+    <div class="panel-head">
+      <div>
+        <h2>账号组合</h2>
+        <p class="panel-sub" id="accounts-sub">自有账号与对标账号一对一绑定，各自独立计算周期</p>
+      </div>
+      <button type="button" class="btn btn-quiet" id="btn-manage">管理账号</button>
+    </div>
+    <div class="pair-list" id="pair-list"></div>
+  </section>
+
+  <section class="panel" id="panel-topics">
+    <div class="panel-head">
+      <div>
+        <h2>AI 选题方向</h2>
+        <p class="panel-sub" id="topics-sub"></p>
+      </div>
+      <div class="picker" id="topic-picker" hidden>
+        <label class="sr-only" for="sel-account">选择账号</label>
+        <select id="sel-account"></select>
+        <label class="sr-only" for="sel-period">选择周期</label>
+        <select id="sel-period"></select>
+      </div>
+    </div>
+    <div id="topic-body"></div>
+
+    <section class="iv" id="index-verify" hidden>
+      <div class="iv-head">
+        <h3>微信指数验证</h3>
+        <label class="iv-field iv-period-pick">周期
+          <select id="iv-period-select"></select>
+        </label>
+        <span class="iv-saving" id="iv-saving" aria-live="polite"></span>
+      </div>
+
+      <div class="iv-rounds" role="tablist">
+        <button type="button" class="iv-round" role="tab" data-round="round1" aria-selected="true">第一轮</button>
+        <button type="button" class="iv-round" role="tab" data-round="round2" aria-selected="false">第二轮</button>
+      </div>
+
+      <div class="iv-legend" id="iv-legend"></div>
+
+      <div class="iv-tools">
+        <div class="iv-brushes" id="iv-brushes" role="group" aria-label="选择要画的曲线"></div>
+        <label class="iv-field">7 天 Y 轴上限
+          <input type="number" id="iv-ymax-d7" min="1" step="100" placeholder="如 10000">
+        </label>
+        <label class="iv-field">30 天 Y 轴上限
+          <input type="number" id="iv-ymax-d30" min="1" step="100" placeholder="如 10000">
+        </label>
+        <button type="button" class="btn btn-quiet" id="iv-undo">撤销上一笔</button>
+        <button type="button" class="btn btn-quiet" id="iv-clear">清空当前关键词</button>
+        <button type="button" class="btn btn-quiet" id="iv-done">完成当前曲线</button>
+        <button type="button" class="btn btn-quiet" id="iv-nodata">无指数数据</button>
+      </div>
+
+      <div class="iv-charts">
+        <figure class="iv-chart">
+          <figcaption>7 天趋势 <span class="iv-hint" id="iv-hint-d7"></span></figcaption>
+          <canvas id="iv-canvas-d7" height="260"></canvas>
+        </figure>
+        <figure class="iv-chart">
+          <figcaption>30 天趋势 <span class="iv-hint" id="iv-hint-d30"></span></figcaption>
+          <canvas id="iv-canvas-d30" height="260"></canvas>
+        </figure>
+      </div>
+
+      <div class="iv-actions">
+        <button type="button" class="btn btn-primary" id="iv-submit" disabled>提交 AI 分析</button>
+        <button type="button" class="btn btn-quiet" id="iv-regen" hidden>重新生成</button>
+        <span class="iv-progress" id="iv-progress" aria-live="polite"></span>
+      </div>
+      <div class="iv-analysis" id="iv-analysis" hidden></div>
+      <div class="iv-final" id="iv-final" hidden></div>
+
+      <p class="iv-status" id="iv-status"></p>
+    </section>
+  </section>
+
+  <section class="panel" id="panel-reports">
+    <div class="panel-head">
+      <div>
+        <h2>报告中心</h2>
+        <p class="panel-sub">历史总报告、三天周期报告、炒冷饭报告与 AI 报告，直接在这里阅读</p>
+      </div>
+      <label class="check">
+        <input type="checkbox" id="chk-sandbox">
+        <span>包含联调沙盒</span>
+      </label>
+    </div>
+    <div class="tabs" role="tablist" id="report-tabs"></div>
+    <div class="report-layout">
+      <ul class="report-list" id="report-list"></ul>
+      <article class="report-reader" id="report-reader">
+        <p class="reader-empty">从左侧选择一份报告</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-result">
+    <div class="panel-head">
+      <div>
+        <h2>本次执行结果</h2>
+        <p class="panel-sub" id="result-sub">还没有执行过操作</p>
+      </div>
+      <button type="button" class="btn btn-quiet" id="btn-log" hidden>查看日志</button>
+    </div>
+    <div id="result-body">
+      <p class="hint-line">点上面的按钮开始。三个账号各自判断周期，未到期的会正常跳过。</p>
+    </div>
+    <pre class="log" id="result-log" hidden></pre>
+  </section>
+
+</div>
+
+<dialog class="dialog" id="dialog-pairs">
+  <form method="dialog" id="pairs-form">
+    <h2>管理账号组合</h2>
+    <p class="dialog-sub">最多三组一对一绑定；保存后只影响之后的周期，历史报告不会被删除。</p>
+    <div id="pairs-editor"></div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-quiet" id="btn-add-pair">加一组</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>取消</button>
+      <button type="button" class="btn btn-primary" id="btn-save-pairs">保存配置</button>
+    </div>
+    <p class="dialog-error" id="pairs-error" hidden></p>
+  </form>
+</dialog>
+
+<dialog class="dialog" id="dialog-confirm">
+  <form method="dialog">
+    <h2 id="confirm-title">开始 AI 分析</h2>
+    <p id="confirm-text" class="dialog-sub"></p>
+    <div class="dialog-actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>先不分析</button>
+      <button type="button" class="btn btn-primary" id="btn-confirm-run">确认分析</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+<script src="{{ url_for('static', filename='wechat_index.js') }}"></script>
+</body>
+</html>
