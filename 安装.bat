@@ -17,19 +17,36 @@ for %%C in (py python python3) do (
 )
 if not defined PY goto nopython
 
+rem ? uv ???? uv??????????????? Python ??? pip ?????
+set "UVEV="
+where uv >nul 2>nul && set "UVEV=1"
+
 if not exist ".venv\Scripts\python.exe" (
     echo [1/3] Creating virtual environment ...
-    %PY% -m venv .venv
-    if errorlevel 1 goto failed
+    if defined UVEV (
+        uv venv .venv --python 3.13
+        if errorlevel 1 (
+            echo       uv failed, falling back to python venv ...
+            %PY% -m venv .venv
+            set "UVEV="
+        )
+    ) else (
+        %PY% -m venv .venv
+    )
+    if not exist ".venv\Scripts\python.exe" goto failed
 ) else (
     echo [1/3] Virtual environment already exists.
 )
 
-if not exist ".pip-tmp" mkdir ".pip-tmp" >nul 2>nul
-set "TEMP=%CD%\.pip-tmp"
-set "TMP=%CD%\.pip-tmp"
 echo [2/3] Installing dependencies ...
-".venv\Scripts\python.exe" -m pip install -q --disable-pip-version-check --retries 2 --timeout 30 -r requirements.txt
+if defined UVEV (
+    uv pip install --python ".venv\Scripts\python.exe" -r requirements.txt
+) else (
+    if not exist ".pip-tmp" mkdir ".pip-tmp" >nul 2>nul
+    set "TEMP=%CD%\.pip-tmp"
+    set "TMP=%CD%\.pip-tmp"
+    ".venv\Scripts\python.exe" -m pip install -q --disable-pip-version-check --retries 2 --timeout 30 -r requirements.txt
+)
 if errorlevel 1 goto pipfailed
 
 if not exist ".env" (
