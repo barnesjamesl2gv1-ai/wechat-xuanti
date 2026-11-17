@@ -36,7 +36,7 @@ if not exist ".env" (
     echo.
     echo   Next step: open .env with Notepad and fill in
     echo     DEEPSEEK_API_KEY, SEARCH_PROVIDER=bocha, BOCHA_API_KEY
-    echo   Then double-click ????-????.bat again.
+    echo   Then double-click the start script again.
     echo.
     pause
     exit /b 0
