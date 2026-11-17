@@ -25,10 +25,12 @@ if not exist ".venv\Scripts\python.exe" (
     echo [1/3] Virtual environment already exists.
 )
 
+if not exist ".pip-tmp" mkdir ".pip-tmp" >nul 2>nul
+set "TEMP=%CD%\.pip-tmp"
+set "TMP=%CD%\.pip-tmp"
 echo [2/3] Installing dependencies ...
-".venv\Scripts\python.exe" -m pip install -q --upgrade pip >nul 2>nul
-".venv\Scripts\python.exe" -m pip install -q -r requirements.txt
-if errorlevel 1 goto failed
+".venv\Scripts\python.exe" -m pip install -q --disable-pip-version-check --retries 2 --timeout 30 -r requirements.txt
+if errorlevel 1 goto pipfailed
 
 if not exist ".env" (
     echo [3/3] Creating .env from .env.example ...
@@ -44,7 +46,7 @@ if not exist ".env" (
 echo [3/3] .env found.
 
 echo.
-echo Starting at http://127.0.0.1:8765/ (close this window to stop)
+echo Starting now - close this window to stop the service.
 ".venv\Scripts\python.exe" web_app.py
 exit /b 0
 
@@ -57,6 +59,14 @@ exit /b 1
 echo [ERROR] Python 3.11+ not found.
 echo Install it from https://www.python.org/downloads/
 echo and remember to check "Add python.exe to PATH" during installation.
+pause
+exit /b 1
+
+:pipfailed
+echo.
+echo [ERROR] Dependency installation failed.
+echo If the download is slow or blocked, try a mirror manually:
+echo   .venv\Scripts\python.exe -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 pause
 exit /b 1
 

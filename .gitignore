@@ -21,6 +21,9 @@ __pycache__/
 # 临时文件
 .tmp/
 tmp/
+.pip-tmp/
+pip-build-tracker-*/
+pip-install-*/
 *.log
 launcher_error.log
 
