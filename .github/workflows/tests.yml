@@ -23,5 +23,8 @@ jobs:
           web_app.py wechat_analyzer.py ai_topic_analyzer.py search_provider.py
           account_profile.py wechat_index_ai.py wechat_index_store.py wechat_index_excel.py
 
+      - name: Leak guard (no personal paths / emails / keys)
+        run: python scripts/check_leaks.py
+
       - name: Event dedup regression tests
         run: python -m unittest test_wechat_index_dedup -v

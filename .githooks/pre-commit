@@ -1,0 +1,30 @@
+#!/bin/sh
+# 提交前自检：扫描暂存内容里的个人信息 / 密钥 / 本机路径
+# 启用一次即可：git config core.hooksPath .githooks
+# 临时跳过：git commit --no-verify
+set -u
+
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$root" || exit 0
+
+# 注意：Windows 上的 `python` 可能是应用商店的占位壳，
+# 所以不能只看「命令存在」，要真的跑一次才认。
+run_check() {
+    for py in ".venv/Scripts/python.exe" ".venv/bin/python" "python3" "python"; do
+        if command -v "$py" >/dev/null 2>&1 && "$py" -c "import sys" >/dev/null 2>&1; then
+            "$py" scripts/check_leaks.py --staged
+            return $?
+        fi
+    done
+    return 127
+}
+
+run_check
+code=$?
+
+if [ "$code" -eq 127 ]; then
+    echo "leakguard: 没有可用的 Python，已跳过自检（按 README 建好 .venv 后自动生效）" >&2
+    exit 0
+fi
+
+exit "$code"

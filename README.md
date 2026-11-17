@@ -129,6 +129,21 @@ TAVILY_API_KEY=
 | 第二轮报「输出被截断」 | 思考型模型的 reasoning 会把 token 吃满，已把上限提到 8000；如仍出现请提 issue |
 | 提交按钮一直灰着 | 每条曲线都要点「完成当前曲线」或标记「无指数数据」 |
 
+## 提交前自检（建议开启）
+
+仓库带了一个提交前钩子，扫描**本次暂存的内容**里有没有：邮箱、本机绝对路径、手机号、`sk-` 类密钥、私钥文件。命中就拦下提交，不会碰到历史提交。
+
+```powershell
+git config core.hooksPath .githooks                              # 每份克隆执行一次
+git config --local leakguard.words "你的公众号名,对标账号名"      # 只想保护的真实名称
+```
+
+- 第二行把真实账号名放进**本地** `.git/config`——它不会被提交，写进仓库反而是另一次泄露。
+- 纯本地运行、不联网，只检查暂存区。
+- 遇到误报：在该行加注释标记 `leakguard:allow`。
+- 临时跳过：`git commit --no-verify`。
+- 手动全量扫一遍：`.\.venv\Scripts\python.exe scripts/check_leaks.py`
+
 ## 许可证
 
 MIT，见 [LICENSE](LICENSE)。
