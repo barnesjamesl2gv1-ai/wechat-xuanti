@@ -19,7 +19,7 @@
 第二条命令版（已经装了 git 和 Python）：
 
 ```powershell
-git clone https://github.com/<owner>/wechat-xuanti.git; cd wechat-xuanti; .\安装.bat
+git clone https://github.com/barnesjamesl2gv1-ai/wechat-xuanti.git; cd wechat-xuanti; .\安装.bat
 ```
 
 ---
@@ -32,7 +32,7 @@ docker run -d --name xuanti -p 127.0.0.1:8767:8767 \
   -e SEARCH_PROVIDER=bocha -e BOCHA_API_KEY=你的key \
   -e XUANTI_ACCESS_TOKEN=自己定一个口令 \
   -v xuanti-data:/app/公众号分析输出 \
-  ghcr.io/<owner>/wechat-xuanti:latest
+  ghcr.io/barnesjamesl2gv1-ai/wechat-xuanti:latest
 ```
 
 打开 http://127.0.0.1:8767 ，第一次会让你访问 `/auth?token=口令` 换 cookie。

@@ -121,7 +121,7 @@ docker run -d -p 127.0.0.1:8767:8767 \
   -e DEEPSEEK_API_KEY=你的key -e SEARCH_PROVIDER=bocha -e BOCHA_API_KEY=你的key \
   -e XUANTI_ACCESS_TOKEN=自己定一个口令 \
   -v xuanti-data:/app/公众号分析输出 \
-  ghcr.io/<owner>/wechat-xuanti:latest
+  ghcr.io/barnesjamesl2gv1-ai/wechat-xuanti:latest
 ```
 
 > ⚠️ 只要不是「只给自己本机看」，就必须设 `XUANTI_ACCESS_TOKEN`。这个工具没有登录体系，不设口令等于把 API 额度公开给能访问到端口的人。设了口令后，第一次打开 `/auth?token=口令` 换 cookie。
@@ -129,10 +129,10 @@ docker run -d -p 127.0.0.1:8767:8767 \
 ## 测试
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest test_wechat_index_dedup test_web_app_status -v
+.\.venv\Scripts\python.exe -m unittest test_wechat_index_dedup test_web_app_status test_web_app_auth -v
 ```
 
-两组都是**离线**用例，不联网、不调模型、不碰真实数据：
+三组都是**离线**用例，不联网、不调模型、不碰真实数据：
 
 - `test_wechat_index_dedup`：事件去重是这个系统里唯一「错了也看不出来」的地方，所以专门钉住了口径（换说法判重、同地区不同事件不误伤、同批次多角度保留等）；
 - `test_web_app_status`：`/api/status` 的返回值必须能被 jsonify 直接序列化——这里曾经混进过 `Path` 对象，导致正式作用域第一次出现 AI 结果时接口 500，而沙盒数据恰好被跳过，所以藏了很久。
