@@ -40,14 +40,18 @@ TIMEOUT = 30
 
 def load_env(path: Path = ENV_FILE) -> dict:
     data: dict[str, str] = {}
-    if not path.is_file():
-        return data
-    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        data[key.strip()] = value.strip().strip('"').strip("'")
+    if path.is_file():
+        for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            data[key.strip()] = value.strip().strip('"').strip("'")
+    # 环境变量优先：容器/服务器部署时用 -e 传密钥，不必挂载 .env
+    for key in ("DEEPSEEK_API_KEY", "SEARCH_PROVIDER", "BOCHA_API_KEY", "TAVILY_API_KEY"):
+        value = (os.environ.get(key) or "").strip()
+        if value:
+            data[key] = value
     return data
 
 

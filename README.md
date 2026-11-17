@@ -108,6 +108,24 @@ TAVILY_API_KEY=
 
 更多设计取舍见 [docs/design.md](docs/design.md)。
 
+## 部署
+
+本项目是本地自托管的，没有官方托管站点：每位使用者在自己的电脑或服务器上运行一份。完整说明见 [docs/deploy.md](docs/deploy.md)，一句话版本：
+
+**Windows 用户**：装好 Python 后双击 `安装.bat`，它会建环境、装依赖、生成 `.env`、启动。
+
+**有 Docker 的机器**（Windows / macOS / Linux / NAS）：
+
+```bash
+docker run -d -p 127.0.0.1:8767:8767 \
+  -e DEEPSEEK_API_KEY=你的key -e SEARCH_PROVIDER=bocha -e BOCHA_API_KEY=你的key \
+  -e XUANTI_ACCESS_TOKEN=自己定一个口令 \
+  -v xuanti-data:/app/公众号分析输出 \
+  ghcr.io/<owner>/wechat-xuanti:latest
+```
+
+> ⚠️ 只要不是「只给自己本机看」，就必须设 `XUANTI_ACCESS_TOKEN`。这个工具没有登录体系，不设口令等于把 API 额度公开给能访问到端口的人。设了口令后，第一次打开 `/auth?token=口令` 换 cookie。
+
 ## 测试
 
 ```powershell

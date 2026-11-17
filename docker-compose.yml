@@ -1,0 +1,18 @@
+services:
+  xuanti:
+    build: .
+    image: wechat-xuanti:local
+    container_name: xuanti
+    restart: unless-stopped
+    ports:
+      # 默认只绑本机，安全；如需局域网内其他设备访问改成 "8767:8767"，并务必设 XUANTI_ACCESS_TOKEN
+      - "127.0.0.1:8767:8767"
+    environment:
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:?请先在 .env 或环境变量里设置 DEEPSEEK_API_KEY}
+      SEARCH_PROVIDER: ${SEARCH_PROVIDER:-bocha}
+      BOCHA_API_KEY: ${BOCHA_API_KEY:-}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+      XUANTI_ACCESS_TOKEN: ${XUANTI_ACCESS_TOKEN:-}
+    volumes:
+      # 数据都落在这里：去重库、报告、手绘曲线。删容器不丢数据靠它
+      - ./公众号分析输出:/app/公众号分析输出

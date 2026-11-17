@@ -1,0 +1,20 @@
+.git
+.github
+.githooks
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.tmp
+tmp
+*.log
+
+# 数据与密钥
+.env
+ai_pairs.json
+公众号分析输出
+storages
+
+# 文档图片与测试（镜像里不需要）
+docs/screenshots
+test_*.py

@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import hmac
 import json
 import os
 import re
@@ -17,7 +18,7 @@ import webbrowser
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, abort, jsonify, render_template, request
+from flask import Flask, abort, jsonify, redirect, render_template, request
 
 import wechat_index_store as index_store
 import wechat_index_ai as index_ai
@@ -31,15 +32,23 @@ ENV_FILE = ROOT / ".env"
 VENV_PY = ROOT / ".venv" / "Scripts" / "python.exe"
 SANDBOX = "_AI联调沙盒"
 
-HOST = "127.0.0.1"
+HOST = (os.environ.get("XUANTI_HOST") or "127.0.0.1").strip()
 DEFAULT_PORT = 8765
 MAX_PAIRS = 3
+# 远程/容器部署时设一个口令，避免任何人打开页面就能花你的 API 额度。
+# 不设（默认）＝ 本机直接用，不打扰。
+ACCESS_TOKEN = (os.environ.get("XUANTI_ACCESS_TOKEN") or "").strip()
+
+
+def probe_host() -> str:
+    """监听 0.0.0.0 / :: 时，本机探活要走回环地址。"""
+    return "127.0.0.1" if HOST in {"", "0.0.0.0", "::", "[::]"} else HOST
 
 
 def port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
         probe.settimeout(0.25)
-        return probe.connect_ex((HOST, port)) == 0
+        return probe.connect_ex((probe_host(), port)) == 0
 
 
 def pick_port() -> int:
@@ -64,6 +73,46 @@ LAST: dict = {"action": None, "ok": None, "at": None, "duration": 0.0,
               "lines": [], "summary": None, "preview": {}}
 
 
+# ---------------------------------------------------------------- 访问口令（可选）
+
+COOKIE_NAME = "xuanti_token"
+
+
+def token_ok(value: str) -> bool:
+    return bool(ACCESS_TOKEN) and hmac.compare_digest((value or "").strip(), ACCESS_TOKEN)
+
+
+@app.before_request
+def require_access_token():
+    """设了 XUANTI_ACCESS_TOKEN 才启用；本机默认不设，不影响日常使用。"""
+    if not ACCESS_TOKEN:
+        return None
+    if request.path == "/auth" or request.path.startswith("/static/") \
+            or request.path == "/favicon.ico":
+        return None
+    if token_ok(request.cookies.get(COOKIE_NAME, "")):
+        return None
+    if request.path.startswith("/api/"):
+        return jsonify({"ok": False,
+                        "error": "需要访问口令：先在浏览器打开 /auth?token=口令 一次"}), 401
+    return ("需要访问口令", 401,
+            {"Content-Type": "text/plain; charset=utf-8"})
+
+
+@app.get("/auth")
+def auth():
+    """用 ?token=口令 换一个 cookie，之后正常访问即可。"""
+    if not ACCESS_TOKEN:
+        return redirect("/")
+    if not token_ok(request.args.get("token", "")):
+        return ("口令不正确。地址形如 /auth?token=你的口令", 401,
+                {"Content-Type": "text/plain; charset=utf-8"})
+    resp = redirect("/")
+    resp.set_cookie(COOKIE_NAME, ACCESS_TOKEN, httponly=True, samesite="Lax",
+                    max_age=30 * 24 * 3600)
+    return resp
+
+
 # ---------------------------------------------------------------- 基础工具
 
 def now_text() -> str:
@@ -84,6 +133,9 @@ def read_json(path: Path, default=None):
 
 
 def has_api_key() -> bool:
+    # 容器/CI 场景用 -e 传密钥，不必挂载 .env
+    if (os.environ.get("DEEPSEEK_API_KEY") or "").strip():
+        return True
     if not ENV_FILE.is_file():
         return False
     try:
@@ -916,7 +968,9 @@ def main() -> int:
     print(f"项目目录：{ROOT}")
     if PORT != wanted:
         print(f"注意：默认端口 {wanted} 已被其他程序占用，本次使用 {PORT}。")
-    print(f"访问地址：http://{HOST}:{PORT}/")
+    print(f"访问地址：http://{HOST if HOST not in ('0.0.0.0', '') else '127.0.0.1'}:{PORT}/")
+    if ACCESS_TOKEN:
+        print(f"已启用访问口令，首次请打开：http://127.0.0.1:{PORT}/auth?token=你的口令")
     print("关闭本窗口即停止服务。")
     print("=" * 52)
     if os.environ.get("XUANTI_OPEN_BROWSER") == "1":
