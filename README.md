@@ -111,7 +111,6 @@ TAVILY_API_KEY=
 ## 部署
 
 本项目是本地自托管的，没有官方托管站点：每位使用者在自己的电脑或服务器上运行一份。完整说明见 [docs/deploy.md](docs/deploy.md)，一句话版本：
-
 **Windows 用户**：装好 Python 后双击 `安装.bat`，它会建环境、装依赖、生成 `.env`、启动。
 
 **有 Docker 的机器**（Windows / macOS / Linux / NAS）：
@@ -125,6 +124,17 @@ docker run -d -p 127.0.0.1:8767:8767 \
 ```
 
 > ⚠️ 只要不是「只给自己本机看」，就必须设 `XUANTI_ACCESS_TOKEN`。这个工具没有登录体系，不设口令等于把 API 额度公开给能访问到端口的人。设了口令后，第一次打开 `/auth?token=口令` 换 cookie。
+
+**懒得自己动手？也可以让 AI agent 完成部署。** 把下面这段话整段发给本机能执行命令的 agent（Claude Code / Codex / Cursor 等）：
+
+```text
+帮我把 https://github.com/barnesjamesl2gv1-ai/wechat-xuanti 部署到我这台电脑：
+用 uv（没有 uv 就用 Python 3.11+ 的 venv）建环境、装依赖、启动服务，
+最后把访问地址告诉我。部署前先检查 Python/uv 是否存在，缺什么先告诉我。
+API Key 我自己填 .env，不要让我在对话里贴出来。
+```
+
+它会 clone、建环境、装依赖、复制出 `.env` 后停下等你自己填 Key，再把访问地址告诉你。前提只有两个：机器上有 Python 3.11+（或 uv/Docker），以及能连 PyPI。
 
 ## 测试
 

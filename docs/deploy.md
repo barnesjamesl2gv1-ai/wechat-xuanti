@@ -82,6 +82,44 @@ docker run -d -p 8767:8767 -e XUANTI_ACCESS_TOKEN=口令 ... 镜像
 
 ---
 
+## 四、用 AI agent 部署（可选）
+
+有能操作本机终端的 AI agent（Claude Code、Codex、Cursor 等）时，可以让它把上面这些步骤全做完。**把下面这段话整段发给它**：
+
+```text
+帮我把 https://github.com/barnesjamesl2gv1-ai/wechat-xuanti 部署到我这台电脑：
+用 uv（没有 uv 就用 Python 3.11+ 的 venv）建环境、装依赖、启动服务，
+最后把访问地址告诉我。部署前先检查 Python/uv 是否存在，缺什么先告诉我。
+API Key 我自己填 .env，不要让我在对话里贴出来。
+```
+
+### agent 会执行的操作
+
+1. `git clone` 仓库（没装 git 的话会下载 ZIP）；
+2. 检查 `uv` / `python` / `docker` 有没有；
+3. 建 `.venv`、装 `requirements.txt` 里的依赖；
+4. 复制 `.env.example` → `.env`，然后**停下来让你填 Key**；
+5. 启动 `web_app.py`，把控制台打印的地址（`127.0.0.1:8765` 起，被占用会自动换）告诉你。
+
+### 需要使用者自行解决的三件事
+
+| 事项 | 说明 |
+|---|---|
+| **API Key** | DeepSeek + 博查各一个，agent 无法代为获取 |
+| **装 Python** | 机器上完全没有 Python/uv/Docker 时，装 Python 可能要管理员权限，agent 会被卡住 |
+| **网络** | 装依赖需要能连 PyPI；国内网络慢时让它加 `-i https://pypi.tuna.tsinghua.edu.cn/simple` |
+
+### 关于 Key 的两点提醒
+
+- **推荐**：让 agent 停在「填 Key」那一步（上面那段话就是这么写的），你自己打开 `.env` 填。
+- **如果你确实想让 agent 一次做完**，可以这样写：「…部署并启动，启动前把 Key 写进 .env：DEEPSEEK_API_KEY=xxx，BOCHA_API_KEY=xxx，SEARCH_PROVIDER=bocha」。此时 Key 会出现在对话记录里，建议用完到控制台**轮换一次密钥**，并确认这个 agent 不会把内容发到别处。
+
+### 一句话的准确预期
+
+能「一句话启动部署」，但做不到「零后续」：前置条件（Python/网络/Key）不满足时，agent 一定会回头问你。实测在已装 uv 的机器上，从干净克隆到启动约 **3 秒**装完依赖。
+
+---
+
 ## 环境变量速查
 
 | 变量 | 默认 | 作用 |
