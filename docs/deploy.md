@@ -98,8 +98,8 @@ API Key 我自己填 .env，不要让我在对话里贴出来。
 1. `git clone` 仓库（没装 git 的话会下载 ZIP）；
 2. 检查 `uv` / `python` / `docker` 有没有；
 3. 建 `.venv`、装 `requirements.txt` 里的依赖；
-4. 复制 `.env.example` → `.env`，然后**停下来让你填 Key**；
-5. 启动 `web_app.py`，把控制台打印的地址（`127.0.0.1:8765` 起，被占用会自动换）告诉你。
+4. 复制 `.env.example` → `.env`，然后**停在填 Key 这一步**；
+5. 启动 `web_app.py`，把控制台打印的地址（`127.0.0.1:8765` 起，被占用会自动换）报出来。
 
 ### 需要使用者自行解决的三件事
 
@@ -107,16 +107,16 @@ API Key 我自己填 .env，不要让我在对话里贴出来。
 |---|---|
 | **API Key** | DeepSeek + 博查各一个，agent 无法代为获取 |
 | **装 Python** | 机器上完全没有 Python/uv/Docker 时，装 Python 可能要管理员权限，agent 会被卡住 |
-| **网络** | 装依赖需要能连 PyPI；国内网络慢时让它加 `-i https://pypi.tuna.tsinghua.edu.cn/simple` |
+| **网络** | 装依赖需要能连 PyPI；国内网络慢时加 `-i https://pypi.tuna.tsinghua.edu.cn/simple` |
 
 ### 关于 Key 的两点提醒
 
-- **推荐**：让 agent 停在「填 Key」那一步（上面那段话就是这么写的），你自己打开 `.env` 填。
-- **如果你确实想让 agent 一次做完**，可以这样写：「…部署并启动，启动前把 Key 写进 .env：DEEPSEEK_API_KEY=xxx，BOCHA_API_KEY=xxx，SEARCH_PROVIDER=bocha」。此时 Key 会出现在对话记录里，建议用完到控制台**轮换一次密钥**，并确认这个 agent 不会把内容发到别处。
+- **推荐**：让 agent 停在「填 Key」那一步（上面那段话就是这么写的），由使用者自己打开 `.env` 填写。
+- **如需 agent 一次做完**，可以这样写：「…部署并启动，启动前把 Key 写进 .env：DEEPSEEK_API_KEY=xxx，BOCHA_API_KEY=xxx，SEARCH_PROVIDER=bocha」。此时 Key 会出现在对话记录里，建议用完到控制台**轮换一次密钥**，并确认该 agent 不会把内容发到别处。
 
 ### 一句话的准确预期
 
-能「一句话启动部署」，但做不到「零后续」：前置条件（Python/网络/Key）不满足时，agent 一定会回头问你。实测在已装 uv 的机器上，从干净克隆到启动约 **3 秒**装完依赖。
+能「一句话启动部署」，但做不到「零后续」：前置条件（Python/网络/Key）不满足时，agent 一定会回头确认。实测在已装 uv 的机器上，从干净克隆到启动约 **3 秒**装完依赖。
 
 ---
 
