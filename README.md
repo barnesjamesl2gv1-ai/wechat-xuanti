@@ -6,11 +6,23 @@
 
 **它不做的事情（很重要）**：不抓取微信文章、不读取微信指数、不写文章、不发布、不自动定时调用 API。所有外发请求只有两个：DeepSeek（生成）和博查/Tavily（联网检索）。
 
-![AI 选题方向](docs/screenshots/topic-directions.png)
+## 操作流程（截图）
 
-![微信指数两轮验证](docs/screenshots/index-verify.png)
+四步，前两步免费：
 
-（截图用的是示例账号数据，不含任何真实账号信息。）
+**① 数据接进来了**：账号组合显示最近周期与文章数，状态「可分析」
+![账号组合](docs/screenshots/1-accounts.png)
+
+**② 预览**：告诉你这一期能不能分析、会花多少 token —— 不调用模型、不花钱
+![预览](docs/screenshots/2-preview.png)
+
+**③ 三组选题方向**：每组带关键词与推荐依据，点一次才真正扣费
+![AI 选题方向](docs/screenshots/3-topics.png)
+
+**④ 微信指数两轮验证**：手绘 7 天/30 天趋势，第二轮联网核实后给出最多 3 个可写标题
+![微信指数验证](docs/screenshots/4-index.png)
+
+（截图用示例账号数据生成，不含任何真实账号信息。）
 
 ---
 
