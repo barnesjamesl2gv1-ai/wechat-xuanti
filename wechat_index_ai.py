@@ -12,11 +12,10 @@
 from __future__ import annotations
 
 import json
-import re
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import search_provider as sp
@@ -328,7 +327,7 @@ def validate_round1(data: dict, round1_keywords: list[str]) -> dict:
     }
 
 
-def run_round1(task: dict, *, progress=None, history_hint: str = "") -> dict:
+def run_round1(task: dict, *, progress=None) -> dict:
     """执行第一轮：联网检索 → 模型判断 → 3 个新关键词。返回更新后的任务。"""
     def step(name: str, detail: str = "") -> None:
         if progress:
@@ -354,7 +353,6 @@ def run_round1(task: dict, *, progress=None, history_hint: str = "") -> dict:
         "notice": "以下热度数值为用户手绘估算，不是微信指数官方数据。",
         "keywords": curve_block,
         "search_results": {k: _trim_rows(v) for k, v in search_map.items()},
-        "account_history_hint": history_hint,
     }
 
     step("model", "调用 DeepSeek 分析走势并推导新关键词")
@@ -495,7 +493,7 @@ def validate_round2(data: dict, keywords: list[str], existing: list[dict]) -> di
             "generated_at": now_text(), "model": {"name": MODEL, "reasoning_effort": EFFORT}}
 
 
-def run_round2(task: dict, *, progress=None, history_hint: str = "") -> dict:
+def run_round2(task: dict, *, progress=None) -> dict:
     """执行第二轮：联网核实 → 事件去重 → 最多 3 个标题。返回更新后的任务。"""
     def step(name: str, detail: str = "") -> None:
         if progress:
@@ -533,7 +531,6 @@ def run_round2(task: dict, *, progress=None, history_hint: str = "") -> dict:
         "round1_assessment": ((task.get("round1") or {}).get("analysis") or {}).get("assessment", ""),
         "news": {k: _trim_rows(v, limit=3, size=320) for k, v in news.items()},
         "already_recommended_events": existing_brief,
-        "account_history_hint": history_hint,
     }
 
     step("model", "调用 DeepSeek 生成选题标题")

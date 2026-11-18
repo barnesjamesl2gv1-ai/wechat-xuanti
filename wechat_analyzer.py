@@ -194,16 +194,6 @@ def fmt(v):
     if v is None: return "未提供"
     return f"{v:,.2f}".rstrip("0").rstrip(".") if isinstance(v,float) else f"{v:,}"
 
-def stats(items):
-    out={"article_count":len(items),"boom_count":sum(1 for a in items if isinstance(a.get("read_count"),(int,float)) and a["read_count"]>BOOM),
-         "unknown_read_count":sum(1 for a in items if a.get("read_count") is None),"metrics":{}}
-    for field,label in METRICS:
-        v=values(items,field)
-        out["metrics"][field]={"count":len(v),"median":statistics.median(v) if v else None,
-                               "average":round(sum(v)/len(v),2) if v else None,"max":max(v) if v else None}
-    out["valid_for_no_boom_streak"]=bool(items) and out["unknown_read_count"]==0
-    return out
-
 def metric_md(items):
     s=stats(items); lines=["| 指标 | 中位数 | 平均数 | 最高值 | 有效数据篇数 |","|---|---:|---:|---:|---:|"]
     for field,label in METRICS:

@@ -25,7 +25,6 @@ tmp/
 pip-build-tracker-*/
 pip-install-*/
 *.log
-launcher_error.log
 
 # 编辑器 / 系统
 .vscode/

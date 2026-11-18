@@ -8,8 +8,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
-import sys
 import urllib.error
 import urllib.request
 from datetime import datetime

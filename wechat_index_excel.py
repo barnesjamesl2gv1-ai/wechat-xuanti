@@ -167,22 +167,6 @@ def core_terms(text: str) -> str:
     return clean
 
 
-def bigrams(text: str) -> set[str]:
-    clean = normalize(text)
-    if len(clean) < 2:
-        return {clean} if clean else set()
-    return {clean[i:i + 2] for i in range(len(clean) - 1)}
-
-
-def similarity(left: str, right: str) -> float:
-    """字符 bigram Jaccard，保留作对照；判重已改用下面的序列相似度。"""
-    a, b = bigrams(left), bigrams(right)
-    if not a or not b:
-        return 0.0
-    inter = len(a & b)
-    return inter / max(1, len(a) + len(b) - inter)
-
-
 def sequence_ratio(left: str, right: str) -> float:
     return SequenceMatcher(None, normalize(left), normalize(right)).ratio()
 

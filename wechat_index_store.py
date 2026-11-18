@@ -28,7 +28,6 @@ CHART_LABELS = {"d7": "7 天", "d30": "30 天"}
 # 每个关键词固定一种颜色，按位置分配，不随轮次变化
 KEYWORD_COLORS = ("#2b4f9e", "#96690f", "#2f7d5b")
 ROUND_KEYS = ("round1", "round2")
-MAX_TITLES = 3
 MAX_KEYWORDS = 3
 
 
