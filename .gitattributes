@@ -1,0 +1,12 @@
+# 统一换行符，避免「Windows 能用、Linux 克隆后变成 LF」的坑
+* text=auto
+
+# .bat 必须 CRLF：cmd 解析 LF 会闪退或报语法错误
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# 图片按二进制处理，不要做换行转换
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary

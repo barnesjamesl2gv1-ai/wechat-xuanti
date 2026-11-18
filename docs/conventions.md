@@ -46,11 +46,11 @@
 
 ## 规则 7：编码与换行按平台常量处理
 
-- `.bat`：**纯 ASCII + CRLF + 无 BOM**（中文提示交给 Python 打印）
+- `.bat`：**纯 ASCII + CRLF + 无 BOM**（中文提示交给 Python 打印），并用 `.gitattributes` 固定 `*.bat text eol=crlf`
 - 文本文件：UTF-8 无 BOM
 - 读文件显式 `encoding="utf-8"`，不要依赖系统默认（中文 Windows 默认 GBK，会把 UTF-8 读成乱码，进而导致误判）
 
-**事故**：`.bat` 中文导致 cmd 解析失败；安装脚本提示语被 ASCII 编码吞成问号；PowerShell 读 UTF-8 显示乱码，一度让我误判文件内容。
+**事故**：`.bat` 中文导致 cmd 解析失败；安装脚本提示语被 ASCII 编码吞成问号；PowerShell 读 UTF-8 显示乱码，一度让我误判文件内容；只靠 Windows 的 `core.autocrlf` 保 CRLF，结果在 Linux CI 上 .bat 变成 LF 直接失败——必须用 `.gitattributes` 固定，不能依赖本机设置。
 
 ## 规则 8：删改前先写「反证条件」
 
