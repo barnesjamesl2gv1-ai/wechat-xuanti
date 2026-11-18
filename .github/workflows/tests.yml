@@ -26,5 +26,8 @@ jobs:
       - name: Leak guard (no personal paths / emails / keys)
         run: python scripts/check_leaks.py
 
+      - name: Preflight (compile, tests, bat encoding, docs, data files)
+        run: python scripts/preflight.py
+
       - name: Event dedup regression tests
         run: python -m unittest test_wechat_index_dedup -v
