@@ -179,6 +179,84 @@ def storage_ready() -> bool:
     return next(root.glob("*/**/article_detail.json"), None) is not None
 
 
+# ---------------------------------------------------------------- 配置读写
+
+WRITABLE_ENV_KEYS = ("DEEPSEEK_API_KEY", "SEARCH_PROVIDER", "BOCHA_API_KEY",
+                     "TAVILY_API_KEY", "XUANTI_STORAGE_ROOT")
+
+
+def write_env(updates: dict[str, str]) -> None:
+    """把配置合并写进 .env：保留注释和无关行，只替换/追加指定键。"""
+    clean: dict[str, str] = {}
+    for key, value in updates.items():
+        if key not in WRITABLE_ENV_KEYS:
+            continue
+        text = str(value or "").strip().strip('"').strip("'")
+        if "\n" in text or "\r" in text:
+            raise ValueError(f"{key} 不能包含换行")
+        if len(text) > 500:
+            raise ValueError(f"{key} 过长")
+        if text:
+            clean[key] = text
+    if not clean:
+        raise ValueError("没有需要保存的内容")
+
+    lines = ENV_FILE.read_text(encoding="utf-8").splitlines() if ENV_FILE.is_file() else []
+    written: set[str] = set()
+    result: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            result.append(line)
+            continue
+        name = stripped.split("=", 1)[0].strip()
+        if name in clean:
+            result.append(f"{name}={clean[name]}")
+            written.add(name)
+        else:
+            result.append(line)
+    missing = [key for key in clean if key not in written]
+    if missing:
+        if result and result[-1].strip():
+            result.append("")
+        for key in missing:
+            result.append(f"{key}={clean[key]}")
+
+    ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
+    tmp = ENV_FILE.with_suffix(ENV_FILE.suffix + ".tmp")
+    tmp.write_text("\n".join(result).rstrip("\n") + "\n", encoding="utf-8")
+    os.replace(tmp, ENV_FILE)
+
+
+def search_state() -> dict:
+    provider = (env_value("SEARCH_PROVIDER") or "").lower()
+    bocha = env_value("BOCHA_API_KEY")
+    tavily = env_value("TAVILY_API_KEY")
+    if not provider:
+        provider = "bocha" if bocha else ("tavily" if tavily else "")
+    ready = bool(bocha) if provider == "bocha" else (bool(tavily) if provider == "tavily" else False)
+    return {"provider": provider, "ready": ready}
+
+
+def storage_root_label(path: Path) -> str:
+    """界面里显示相对路径更易读；项目外的绝对路径照原样显示。"""
+    try:
+        return path.relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def settings_view() -> dict:
+    return {
+        "key_ready": has_api_key(),
+        "provider": search_state()["provider"],
+        "search_ready": search_state()["ready"],
+        "storage_root": storage_root_label(resolve_storage_root()),
+        "storage_ready": storage_ready(),
+        "env_file": str(ENV_FILE),
+    }
+
+
 def is_sandbox(path: Path) -> bool:
     return SANDBOX in path.parts
 
@@ -575,6 +653,37 @@ def favicon():
 @app.get("/api/status")
 def api_status():
     return jsonify(build_status())
+
+
+@app.get("/api/settings")
+def api_settings_get():
+    """只返回配置状态，绝不回传密钥本身。"""
+    return jsonify({"ok": True, **settings_view()})
+
+
+@app.post("/api/settings")
+def api_settings_post():
+    payload = request.get_json(silent=True) or {}
+    mapping = {
+        "deepseek_api_key": "DEEPSEEK_API_KEY",
+        "search_provider": "SEARCH_PROVIDER",
+        "bocha_api_key": "BOCHA_API_KEY",
+        "tavily_api_key": "TAVILY_API_KEY",
+        "storage_root": "XUANTI_STORAGE_ROOT",
+    }
+    provider = str(payload.get("search_provider") or "").strip().lower()
+    if provider and provider not in {"bocha", "tavily"}:
+        return jsonify({"ok": False, "error": "搜索服务只能是 bocha 或 tavily"}), 400
+
+    updates: dict[str, str] = {}
+    for form_key, env_key in mapping.items():
+        if form_key in payload and payload[form_key] is not None:
+            updates[env_key] = str(payload[form_key])
+    try:
+        write_env(updates)
+    except ValueError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
+    return jsonify({"ok": True, **settings_view()})
 
 
 @app.get("/api/pairs")

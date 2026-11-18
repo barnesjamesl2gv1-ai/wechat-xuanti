@@ -16,6 +16,7 @@
     busy: false,
     entered: false,
     sandbox: false,
+    settings: null,
   };
 
   let confirmAction = null;
@@ -581,6 +582,7 @@
         state.activeAiId = state.status.latest_ai.id || null;
       }
       renderTopics();
+      await loadSettings();
       if (!quiet) {
         await loadGroups();
       }
@@ -674,8 +676,79 @@
     }
   }
 
-  function askConfirm(title, text, action) {
-    $('#confirm-title').textContent = title || '确认';
+  /* ------------------------------------------------------------ 本机配置 */
+
+  async function loadSettings() {
+    try {
+      state.settings = await api('/api/settings');
+    } catch (_) {
+      state.settings = null;
+    }
+    renderSetupBanner();
+  }
+
+  function renderSetupBanner() {
+    const banner = $('#setup-banner');
+    if (!banner) return;
+    const s = state.settings || {};
+    const missing = [];
+    if (!s.key_ready) missing.push('还没填 DeepSeek Key');
+    if (!s.search_ready) missing.push('还没配联网搜索 Key');
+    if (!s.storage_ready) missing.push('还没有文章数据');
+    if (!missing.length) { banner.hidden = true; return; }
+    banner.hidden = false;
+    $('#setup-text').textContent = missing.join('；') + '。点右边完成配置。';
+  }
+
+  function openSettings() {
+    const s = state.settings || {};
+    const providerName = { bocha: '博查', tavily: 'Tavily' }[s.provider] || '未配置';
+    $('#settings-status').textContent =
+      `当前：DeepSeek Key ${s.key_ready ? '已配置' : '未配置'}　` +
+      `搜索 ${s.search_ready ? providerName + ' 已配置' : '未配置'}　` +
+      `数据 ${s.storage_ready ? '已就绪' : '暂无'}（${s.storage_root || './storages'}）`;
+    ['#set-deepseek', '#set-bocha', '#set-tavily', '#set-storage'].forEach((sel) => {
+      const input = $(sel);
+      if (input) input.value = '';
+    });
+    $('#set-provider').value = '';
+    $('#settings-error').hidden = true;
+    $('#dialog-settings').showModal();
+  }
+
+  async function saveSettings() {
+    const error = $('#settings-error');
+    error.hidden = true;
+    const value = (sel) => ($(sel).value || '').trim();
+    const payload = {
+      deepseek_api_key: value('#set-deepseek'),
+      search_provider: value('#set-provider'),
+      bocha_api_key: value('#set-bocha'),
+      tavily_api_key: value('#set-tavily'),
+      storage_root: value('#set-storage'),
+    };
+    if (!Object.values(payload).some(Boolean)) {
+      error.textContent = '没有填写任何内容，已保存的配置不会被修改。';
+      error.hidden = false;
+      return;
+    }
+    try {
+      state.settings = await api('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      $('#dialog-settings').close();
+      toast('配置已保存到本机 .env');
+      renderSetupBanner();
+      await refresh({ quiet: true });
+    } catch (err) {
+      error.textContent = err.message;
+      error.hidden = false;
+    }
+  }
+
+  function askConfirm(title, text, action) {    $('#confirm-title').textContent = title || '确认';
     $('#confirm-text').textContent = text || '';
     confirmAction = action;
     $('#dialog-confirm').showModal();
@@ -716,6 +789,9 @@
 
     $('#btn-manage').addEventListener('click', openPairsDialog);
     $('#btn-save-pairs').addEventListener('click', savePairs);
+    $('#btn-settings').addEventListener('click', openSettings);
+    $('#btn-setup-open').addEventListener('click', openSettings);
+    $('#btn-save-settings').addEventListener('click', saveSettings);
 
     const sandboxToggle = $('#chk-sandbox');
     if (sandboxToggle) {

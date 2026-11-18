@@ -57,6 +57,10 @@
 
 ## 安装
 
+**Windows：双击 `安装.bat`** —— 自动建环境、装依赖、生成 `.env`，装完直接启动（约 3 秒）。
+
+手动安装（任意平台）：
+
 ```powershell
 git clone <本仓库地址> wechat-xuanti
 cd wechat-xuanti
@@ -67,9 +71,19 @@ python -m venv .venv
 
 > 注意：`.bat` 脚本要求 `.bat` 文件是 **CRLF + 纯 ASCII**，中文提示一律交给 Python 打印。改脚本时别用会转成 LF 的编辑器保存。
 
-## 配置
+## 配置（不用改文件）
 
-复制 `.env.example` 为 `.env`，填两个 Key：
+启动后点右上角 **「配置」**，在页面上填两个 Key 即可，保存后立即生效：
+
+![第一次配置](docs/screenshots/6-settings.png)
+
+- 只写入本机 `.env`，不会上传；已保存的密钥不会回显
+- 留空的项不会被修改；数据目录也能在这里改
+- 还没配置时，首页顶部会直接提示缺什么：
+
+![首次使用提示](docs/screenshots/5-first-setup.png)
+
+也可以手动编辑 `.env`（字段见 `.env.example`）：
 
 ```ini
 DEEPSEEK_API_KEY=你的key
@@ -78,7 +92,7 @@ BOCHA_API_KEY=你的key
 TAVILY_API_KEY=
 ```
 
-`.env` 已在 `.gitignore` 里，**不要提交**。程序只从 `.env` 读密钥，不读环境变量、不写日志。
+`.env` 已在 `.gitignore` 里，**不要提交**。程序只从 `.env` 或环境变量读密钥，不写日志。
 
 然后准备账号组合（自有账号 ↔ 对标账号），在网页上填也可以，或直接编辑 `ai_pairs.json`：
 

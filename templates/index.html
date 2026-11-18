@@ -16,6 +16,7 @@
     </div>
     <div class="topbar-meta">
       <span class="chip"><span class="chip-dot" aria-hidden="true"></span>本地运行 · 127.0.0.1:{{ port }}</span>
+      <button type="button" class="btn btn-quiet" id="btn-settings">配置</button>
       <button type="button" class="btn btn-quiet" id="btn-refresh">刷新页面</button>
     </div>
   </header>
@@ -39,6 +40,10 @@
       </div>
     </div>
     <p class="actionbar-note">第 3 步只有在第 2 步显示「可分析」时才会真正花钱；没到时间会自动跳过，不会乱扣费。</p>
+    <div class="setup-banner" id="setup-banner" hidden>
+      <span id="setup-text"></span>
+      <button type="button" class="btn btn-quiet" id="btn-setup-open">去配置</button>
+    </div>
   </section>
 
   <section class="panel" id="panel-accounts">
@@ -180,6 +185,50 @@
       <button type="button" class="btn" data-close>先不分析</button>
       <button type="button" class="btn btn-primary" id="btn-confirm-run">确认分析</button>
     </div>
+  </form>
+</dialog>
+
+<dialog class="dialog" id="dialog-settings">
+  <form method="dialog" id="settings-form">
+    <h2>本机配置</h2>
+    <p class="dialog-sub">只写入本机的 <code>.env</code>，不会上传到任何地方。留空的项不会被修改，已保存的密钥也不会显示出来。</p>
+    <p class="dialog-sub" id="settings-status"></p>
+
+    <div class="settings-field">
+      <label for="set-deepseek">DeepSeek API Key</label>
+      <input type="password" id="set-deepseek" autocomplete="off" placeholder="已配置则留空">
+    </div>
+
+    <div class="settings-field">
+      <label for="set-provider">联网搜索服务</label>
+      <select id="set-provider">
+        <option value="">保持不变</option>
+        <option value="bocha">博查（国内）</option>
+        <option value="tavily">Tavily（海外）</option>
+      </select>
+    </div>
+
+    <div class="settings-field">
+      <label for="set-bocha">博查 API Key</label>
+      <input type="password" id="set-bocha" autocomplete="off" placeholder="已配置则留空">
+    </div>
+
+    <div class="settings-field">
+      <label for="set-tavily">Tavily API Key</label>
+      <input type="password" id="set-tavily" autocomplete="off" placeholder="已配置则留空">
+    </div>
+
+    <div class="settings-field">
+      <label for="set-storage">文章数据目录</label>
+      <input type="text" id="set-storage" autocomplete="off" placeholder="默认 ./storages；也可填采集端的目录">
+    </div>
+
+    <div class="dialog-actions">
+      <span class="spacer"></span>
+      <button type="button" class="btn" data-close>取消</button>
+      <button type="button" class="btn btn-primary" id="btn-save-settings">保存配置</button>
+    </div>
+    <p class="dialog-error" id="settings-error" hidden></p>
   </form>
 </dialog>
 
