@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from common import folder_name as account_folder_name
+
 try:
     from openpyxl import Workbook, load_workbook
     from openpyxl.styles import Font, PatternFill, Alignment
@@ -313,10 +315,6 @@ def metric_md_from_stats(summary):
         )
     return "\n".join(lines)
 
-
-def account_folder_name(account):
-    name = re.sub(r'[<>:"/\\|?*]', "_", str(account)).strip(" .")
-    return name[:80] or "未知公众号"
 
 
 def period_summary(account, start, end, items, supplement):

@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import tempfile
-from datetime import datetime
 from pathlib import Path
+
+from common import folder_name, now_text
 
 ROOT = Path(__file__).resolve().parent
 OUTPUT = ROOT / "公众号分析输出"
@@ -31,13 +31,6 @@ ROUND_KEYS = ("round1", "round2")
 MAX_KEYWORDS = 3
 
 
-def now_text() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
-def folder_name(account: str) -> str:
-    name = re.sub(r'[<>:"/\\|?*]', "_", str(account)).strip(" .")
-    return name[:80] or "未知公众号"
 
 
 def base_dir(sandbox: bool = False) -> Path:

@@ -12,13 +12,14 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
+
+from common import folder_name, now_text
 
 ROOT = Path(__file__).resolve().parent
 OUTPUT = ROOT / "公众号分析输出"
@@ -30,13 +31,6 @@ COLUMN_WIDTHS = [19, 24, 8, 14, 42, 28, 46, 52]
 SHEET_TITLE = "已推荐事件"
 
 
-def now_text() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
-def folder_name(account: str) -> str:
-    name = re.sub(r'[<>:"/\\|?*]', "_", str(account)).strip(" .")
-    return name[:80] or "未知公众号"
 
 
 def book_path(account: str, sandbox: bool = False) -> Path:

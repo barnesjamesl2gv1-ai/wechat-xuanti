@@ -20,6 +20,7 @@ from pathlib import Path
 
 import search_provider as sp
 import wechat_index_excel
+from common import now_text
 
 ROOT = Path(__file__).resolve().parent
 ENV_FILE = ROOT / ".env"
@@ -40,9 +41,6 @@ def read_api_key() -> str:
     env = sp.load_env(ENV_FILE)
     return (env.get("DEEPSEEK_API_KEY") or "").strip()
 
-
-def now_text() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def call_json(system_prompt: str, user_payload: dict, *, max_tokens: int = OUTPUT_MAX_TOKENS) -> tuple[dict, dict]:

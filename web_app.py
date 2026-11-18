@@ -15,11 +15,11 @@ import sys
 import threading
 import time
 import webbrowser
-from datetime import datetime
 from pathlib import Path
 
 from flask import Flask, abort, jsonify, redirect, render_template, request
 
+from common import folder_name, now_text
 import wechat_index_store as index_store
 import wechat_index_ai as index_ai
 
@@ -115,14 +115,6 @@ def auth():
 
 # ---------------------------------------------------------------- 基础工具
 
-def now_text() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
-def folder_name(account: str) -> str:
-    """与 wechat_analyzer.account_folder_name 保持一致的目录命名。"""
-    name = re.sub(r'[<>:"/\\|?*]', "_", str(account)).strip(" .")
-    return name[:80] or "未知公众号"
 
 
 def read_json(path: Path, default=None):

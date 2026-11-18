@@ -11,10 +11,10 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from pathlib import Path
 
 import wechat_index_ai as ai
+from common import folder_name, now_text
 
 ROOT = Path(__file__).resolve().parent
 OUTPUT = ROOT / "公众号分析输出"
@@ -40,14 +40,6 @@ PROFILE_SYSTEM = """你是微信公众号账号运营分析助手。
 - 直接输出 Markdown 正文，不要输出 JSON，不要写「以下是」之类的开场白。"""
 
 
-def now_text() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
-def folder_name(account: str) -> str:
-    import re
-    name = re.sub(r'[<>:"/\\|?*]', "_", str(account)).strip(" .")
-    return name[:80] or "未知公众号"
 
 
 def profile_path(account: str) -> Path:
