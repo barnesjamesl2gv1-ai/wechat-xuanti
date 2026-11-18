@@ -124,6 +124,26 @@ def read_json(path: Path, default=None):
         return default
 
 
+def env_value(name: str) -> str:
+    """读一个配置值：环境变量优先，其次 .env（与密钥读取保持同一优先级）。"""
+    value = (os.environ.get(name) or "").strip()
+    if value:
+        return value
+    if not ENV_FILE.is_file():
+        return ""
+    try:
+        for line in ENV_FILE.read_text(encoding="utf-8", errors="replace").splitlines():
+            text = line.strip()
+            if not text or text.startswith("#") or "=" not in text:
+                continue
+            key, _, raw = text.partition("=")
+            if key.strip() == name:
+                return raw.strip().strip('"').strip("'")
+    except Exception:
+        return ""
+    return ""
+
+
 def has_api_key() -> bool:
     # 容器/CI 场景用 -e 传密钥，不必挂载 .env
     if (os.environ.get("DEEPSEEK_API_KEY") or "").strip():
@@ -141,6 +161,22 @@ def has_api_key() -> bool:
     except Exception:
         return False
     return False
+
+
+def resolve_storage_root() -> Path:
+    """文章数据目录：默认 ./storages；可用 XUANTI_STORAGE_ROOT 指向采集端的输出目录。"""
+    raw = env_value("XUANTI_STORAGE_ROOT")
+    if not raw:
+        return ROOT / "storages"
+    path = Path(raw)
+    return path if path.is_absolute() else (ROOT / path).resolve()
+
+
+def storage_ready() -> bool:
+    root = resolve_storage_root()
+    if not root.is_dir():
+        return False
+    return next(root.glob("*/**/article_detail.json"), None) is not None
 
 
 def is_sandbox(path: Path) -> bool:
@@ -500,6 +536,8 @@ def build_status() -> dict:
             "port": PORT,
             "root": str(ROOT),
             "venv_ready": VENV_PY.is_file(),
+            "storage_root": str(resolve_storage_root()),
+            "storage_ready": storage_ready(),
         },
         "last": {
             "action": last.get("action"), "ok": last.get("ok"),
@@ -598,7 +636,15 @@ def api_pairs_post():
 def api_update_data():
     if not begin_task("update-data"):
         return jsonify({"ok": False, "error": "已有任务正在执行，请等待完成"}), 409
-    result = run_script(["wechat_analyzer.py"], timeout=900)
+    root = resolve_storage_root()
+    if not storage_ready():
+        end_task({"ok": False, "code": -1, "stdout": "", "stderr": "", "duration": 0.0})
+        return jsonify({
+            "ok": False,
+            "error": f"还没有文章数据：{root} 里找不到 article_detail.json。"
+                     f"请先运行采集端抓文章，或用 .env 的 XUANTI_STORAGE_ROOT 指向采集目录。",
+        }), 400
+    result = run_script(["wechat_analyzer.py", "--storage-root", str(root)], timeout=900)
     result["stats"] = parse_update_summary(result.get("stdout") or "")
     end_task(result)
     return jsonify({"ok": result["ok"], "code": result["code"],
