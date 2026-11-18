@@ -69,8 +69,7 @@ def check_tests() -> None:
 def check_leaks() -> None:
     script = ROOT / "scripts" / "check_leaks.py"
     if not script.is_file():
-        WARNINGS.append("缺少 scripts/check_leaks.py")
-        return
+        return  # 该仓库没装 leakguard 时静默跳过
     proc = subprocess.run([sys.executable, str(script)], cwd=ROOT,
                           capture_output=True, text=True, encoding="utf-8", errors="replace")
     if proc.returncode != 0:
@@ -86,8 +85,12 @@ def check_bat_files() -> None:
         if raw.startswith(b"\xef\xbb\xbf"):
             ERRORS.append(f"{name}: 含 UTF-8 BOM，cmd 会把它当命令")
         non_ascii = sum(1 for byte in raw if byte > 127)
-        if non_ascii:
-            ERRORS.append(f"{name}: 含 {non_ascii} 个非 ASCII 字节，中文会导致 cmd 解析失败")
+        declares_utf8 = b"chcp 65001" in raw
+        if non_ascii and not declares_utf8:
+            ERRORS.append(f"{name}: 含 {non_ascii} 个非 ASCII 字节，中文会导致 cmd 解析失败"
+                          f"（如确需中文，请在脚本里加 chcp 65001 并把文件存为 UTF-8）")
+        elif non_ascii:
+            WARNINGS.append(f"{name}: 含中文，已用 chcp 65001 声明 UTF-8")
         crlf = raw.count(b"\r\n")
         lf = raw.count(b"\n")
         if crlf == 0:
@@ -147,10 +150,15 @@ def check_tracked_files() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="发布前自检")
     parser.add_argument("--strict", action="store_true", help="警告也视为失败")
+    parser.add_argument("--profile", choices=("open", "private"), default="open",
+                        help="open=公开仓库（含文档与泄露检查）；private=私有仓库（只查代码与数据）")
     args = parser.parse_args()
 
-    for check in (check_compile, check_tests, check_leaks, check_bat_files,
-                  check_doc_images, check_placeholders, check_tracked_files):
+    checks = [check_compile, check_tests, check_leaks, check_bat_files,
+              check_tracked_files]
+    if args.profile == "open":
+        checks += [check_doc_images, check_placeholders]
+    for check in checks:
         check()
 
     for line in ERRORS:
