@@ -110,8 +110,12 @@ def check_doc_images() -> None:
         for target in IMAGE_RE.findall(doc.read_text(encoding="utf-8")):
             if target.startswith(("http://", "https://", "#")):
                 continue
-            if not (doc.parent / target).exists():
-                ERRORS.append(f"{rel(doc)}: 引用的图片不存在 -> {target}")
+            # Markdown 链接可以带锚点（docs/x.md#某节），锚点不是路径的一部分
+            path_text = target.split("#", 1)[0].strip()
+            if not path_text:
+                continue
+            if not (doc.parent / path_text).exists():
+                ERRORS.append(f"{rel(doc)}: 引用的图片或文档不存在 -> {target}")
 
 
 # ---------------------------------------------------------------- 6. 占位符

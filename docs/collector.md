@@ -44,6 +44,29 @@ uv run python main.py
 
 采集完成后，文章会落在 `collector/storages/<账号>/<文章>/`。
 
+### 桌面窗口起不来时（Python 3.13 常见）
+
+采集器的桌面窗口用 pywebview，Windows 上它依赖 pythonnet + .NET。本机实测（Python 3.13 + pythonnet 3.1.0）会直接弹：
+
+```text
+程序启动失败：Failed to resolve Python.Runtime.Loader.Initialize from
+...\pythonnet\runtime\Python.Runtime.dll
+```
+
+这不是证书、代理或微信的问题，是**桌面外壳加载 .NET 失败**。上游自带一个开发后端，
+跑的是同一个后端和同一份前端，只是外壳换成浏览器：
+
+```powershell
+cd collector
+uv run python dev_server.py
+```
+
+然后浏览器打开 <http://127.0.0.1:8766/index.html>。界面和功能完全一样：选公众号、开始运行、看进度。
+
+- 8766 被占用时 `dev_server.py` 会直接报错退出，先关掉占用该端口的程序
+- 浏览器模式下关标签页**不会**停服务，要停就在终端里 Ctrl+C 或关掉那个窗口
+- 这是上游的「开发模式」入口，日常够用；想要常驻稳定，等上游修好 pythonnet 或用 Python 3.12 建环境
+
 ## 回到本项目
 
 双击 `启动系统-浏览器版.bat`，先点「更新本地数据」。
@@ -59,6 +82,7 @@ uv run python main.py
 | 提示「还没有文章数据」 | 采集端还没抓过，或 `.env` 里的路径写错 |
 | `uv` 找不到 | 先装 uv：`powershell -c "irm https://astral.sh/uv/install.ps1 \| iex"` |
 | 采集器启动报证书/代理错误 | 按上游 README 装 mitmproxy 证书；这是采集器自己的前置条件 |
+| 采集器弹 `Failed to resolve Python.Runtime.Loader.Initialize` | 桌面外壳依赖 pythonnet/.NET，Python 3.13 上加载失败 → 改用 `uv run python dev_server.py`，浏览器打开 8766（见上一节） |
 | 依赖装不上 | 试试国内镜像：`set UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple` |
 
 ## 合规提醒

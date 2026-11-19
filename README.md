@@ -140,6 +140,7 @@ TAVILY_API_KEY=
 
 1. **装采集端**：双击 `安装采集端.bat` —— 自动下载到 `collector/`、装依赖、把数据目录接到本项目
 2. **采集文章**：`cd collector` 然后 `uv run python main.py`，按采集器界面操作
+   - **桌面窗口起不来**（报 `Failed to resolve Python.Runtime.Loader.Initialize ... Python.Runtime.dll`）就改用浏览器模式：`uv run python dev_server.py`，然后打开 <http://127.0.0.1:8766/index.html>，界面完全一样
 3. **跑选题**：双击 `启动系统-浏览器版.bat`，点「更新本地数据」→ 预览 → 开始 AI 分析
 
 采集器是上游项目（CC BY-NC-SA 4.0，不可商用），本项目是 MIT，所以**代码不复制、只帮你装**。详细步骤和常见问题见 [docs/collector.md](docs/collector.md)。
@@ -192,6 +193,7 @@ agent 会 clone、建环境、装依赖、复制出 `.env`，停在填 Key 这�
 | 页面被别的程序占了 | 端口被其他程序占用，程序会自动换端口，看控制台打印的地址 |
 | `.bat` 双击闪退 | 检查文件是否被存成了 LF 换行或含中文 |
 | 第二轮报「输出被截断」 | 思考型模型的 reasoning 会把 token 吃满，已把上限提到 8000；如仍出现请提 issue |
+| 采集器弹 `Failed to resolve Python.Runtime.Loader.Initialize` | 采集器的桌面窗口依赖 pythonnet/.NET，Python 3.13 上加载失败；改用它的浏览器模式 `uv run python dev_server.py`，见 [docs/collector.md](docs/collector.md#桌面窗口起不来时python-313-常见) |
 | 提交按钮一直灰着 | 每条曲线都要点「完成当前曲线」或标记「无指数数据」 |
 
 ## 提交前自检（建议开启）

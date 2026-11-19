@@ -50,6 +50,12 @@ echo   2. uv run python main.py
 echo      ^(follow the collector UI to capture articles^)
 echo   3. come back and double-click the start script of this project
 echo.
+echo If the collector window fails with a pythonnet / Python.Runtime.dll
+echo error (Python 3.13), use its browser mode instead:
+echo     cd collector
+echo     uv run python dev_server.py
+echo   then open http://127.0.0.1:8766/index.html
+echo.
 echo If capture fails, read the collector docs first;
 echo it needs a proxy certificate and WeChat PC client.
 pause

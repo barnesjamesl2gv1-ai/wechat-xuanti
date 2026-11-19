@@ -58,6 +58,23 @@
 
 **事故**：同一类错误出现两次——一次判采集端为死代码，一次把 `desktop_launcher.py` 判成 0 引用死文件（它 `Popen` 启动 `main.py`）。
 
+## 规则 9：启动入口必须有「无 GUI 退路」，并由冒烟测试守住
+
+**做法**：
+
+- 任何「双击启动 / 命令行启动」的入口，都要能在**不依赖图形界面**的情况下跑起来；桌面外壳只能是可选装饰
+- 文档写启动方式时，同时写清「外壳起不来该用什么」，优先给项目自带的无 GUI 入口
+- 每个仓库至少一条**启动冒烟测试**：真的起进程、真的监听端口、真的取一次首页和接口（`test_web_app_boot.py`）
+- 仓库声明「纯浏览器 / 纯 Python」时，用护栏测试挡住 GUI/.NET 依赖回流（`test_no_gui_deps.py`）
+
+**事故**：2026-11-19 采集端启动即崩——`Failed to resolve Python.Runtime.Loader.Initialize`，pywebview 依赖的 pythonnet 在 Python 3.13 上加载 .NET 失败，整个程序直接退出。当时所有单元测试都是绿的，因为测试只 import 模块、从不启动服务；而 `docs/collector.md` 把 `uv run python main.py` 写成了唯一启动方式，用户照着做必然撞上。修法：采集端加 `--browser`，本文档补 `dev_server.py` 退路，并把「真的能起来」变成 CI 断言。
+
+## 规则 10：仓库自带的启动/安装脚本，改动后必须按真实入口跑一次
+
+**做法**：改 `.bat`、`scripts/serve.py`、`Dockerfile` 之类「用户第一眼就会执行」的文件后，不要只看 diff：按用户的方式跑一遍（双击、`docker run`、`uv run`），确认它真的能到「可用」状态。
+
+**事故**：安装脚本连改四次（乱码 → TEMP 不可写 → pip 卡死 → uv 优先级），每次都是「本机已验证」却把问题留给第一次真实部署。
+
 ---
 
 ## 自动化落点
@@ -66,6 +83,8 @@
 |---|---|
 | `scripts/check_leaks.py` | 每次 commit（`.githooks/pre-commit`） |
 | `scripts/preflight.py` | 每次 push（`.githooks/pre-push`）+ CI |
+| `test_web_app_boot.py`（启动冒烟） | 随 preflight / CI 一起跑 |
+| `test_no_gui_deps.py`（依赖护栏） | 随 preflight / CI 一起跑 |
 | `tests` + `docker` 工作流 | 每次 push |
 
 启用钩子（每份克隆一次）：
